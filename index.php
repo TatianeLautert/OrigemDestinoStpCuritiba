@@ -36,12 +36,12 @@
 	
 		<div id="all">
 
-			<div id="left">
+			<div id="right">
 				<?php include 'tela_painel.php'; ?>
 				<div id="map"></div>
 			</div>
 			
-			<div id="right">
+			<div id="left">
 				
 				<div class="row row-custom">  
 					<div class="col-xs-6">

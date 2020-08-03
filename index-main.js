@@ -6,15 +6,77 @@ var map = new L.Map('map', {
 
 //define informações para buscar camada de fotos do OSM
 var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', osmAttrib = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-
 //cria camada de imagens do OSM
 var camada_OSM = L.tileLayer(osmUrl, {opacity: 1});
-
 //adiciona camada no mapa
 map.addLayer(camada_OSM);
-
 //adiciona escala no mapa
 L.control.scale({metric: true, imperial: false}).addTo(map);
+const LAYER_CONTROL = L.control.layers({"OSM": camada_OSM}, {});
+LAYER_CONTROL.addTo(map);
+
+function adicionaCamadasEstaticas() {
+	$.ajax({
+		type:'get',
+		url:'bd_rois.php',
+		dataType: 'json',
+		contentType: "application/json;charset=utf-8",
+		data: {"tipo_roi": 'bairro'},
+		success: function(contornos){
+			adicionaPoligonosNoMapa(contornos, 'Bairros', true);
+		}
+	});
+	$.ajax({
+		type:'get',
+		url:'bd_rois.php',
+		dataType: 'json',
+		contentType: "application/json;charset=utf-8",
+		data: {"tipo_roi": 'regiao'},
+		success: function(contornos){
+			adicionaPoligonosNoMapa(contornos, 'Região', false);
+		}
+	});
+
+	$.ajax({
+		type:'get',
+		url:'bd_unidades.php',
+		dataType: 'json',
+		contentType: "application/json;charset=utf-8",
+		success: function(contornos){
+			adicionarMarcadorNoMapa(contornos, 'UMS');
+		}
+	});
+}
+
+adicionaCamadasEstaticas();
+
+function adicionarMarcadorNoMapa(aux_contornos, nome_camada) {
+	var poligono;
+	var poligonos_da_camada = [];
+	console.log(aux_contornos);
+	//itera a lista de rois
+	$.each(aux_contornos, function (i, aux_contorno) {
+		const randomColor ='#' + Math.floor(Math.random()*16777215).toString(16);
+		//cria poligono
+		contorno = JSON.parse(aux_contorno.contorno)[0];
+		console.log(contorno);
+		if (contorno == null) {
+			return;
+		}
+		//
+		poligono = L.marker([contorno.lat, contorno.lng]);
+		poligono.bindPopup(aux_contorno.nome);
+		//adiciona poligono no mapa
+		//map.addLayer(poligono);
+		//adiciona o poligono na lista de rois
+		poligonos_da_camada.push(poligono);
+		if (nome_camada == null) {
+			nome_camada = aux_contorno.nome;
+		}
+	})
+	LAYER_CONTROL.addOverlay(L.layerGroup(poligonos_da_camada), nome_camada);
+}
+
 
 //cria uma camada de heatmap
 var heatmap = L.heatLayer().setOptions({
@@ -247,33 +309,38 @@ function removePoligonosDoMapa(){
 	poligonos = [];
 }
 
-function adicionaPoligonosNoMapa(aux_contornos){
-	
+function adicionaPoligonosNoMapa(aux_contornos, nome_camada, habilitar) {
 	var poligono;
-					
+	var poligonos_da_camada = [];
+	console.log(aux_contornos);
 	//itera a lista de rois
 	$.each(aux_contornos, function (i, aux_contorno) {
-										
+		const randomColor ='#' + Math.floor(Math.random()*16777215).toString(16);
 		//cria poligono
 		poligono = L.polygon(eval(aux_contorno.contorno),{
 			stroke: true,
-			color: 'grey',
+			color: randomColor,
 			opacity: true,
 			opacity: 0.8,
 			weight: 2,
-			fillColor: 'grey',
+			fillColor: randomColor,
 			fillOpacity: 0.35,
 			id: aux_contorno.id,
 			descricao: aux_contorno.nome,
 			tipo_selecao: 0 //se está selecionado como origem (1), como destino (2) ou como ambos (3)
 		});
-		
 		//adiciona poligono no mapa
-		map.addLayer(poligono);
-		
+		if (habilitar == null || habilitar) {
+			map.addLayer(poligono);
+		}
 		//adiciona o poligono na lista de rois
 		poligonos.push(poligono);
-	});	
+		poligonos_da_camada.push(poligono);
+		if (nome_camada == null) {
+			nome_camada = aux_contorno.nome;
+		}
+	})
+	LAYER_CONTROL.addOverlay(L.layerGroup(poligonos_da_camada), nome_camada);
 }
 
 function defineAcoesNosPoligonos(){

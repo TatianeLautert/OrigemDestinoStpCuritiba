@@ -31,58 +31,6 @@
 		</div>
 
 		<div class="row">
-			<select class="form-control custom" id="tipo_roi" onChange="mudaPoligonos()" data-toggle="tooltip" title="Selecione a partir de quantos ROI você deseja analisar o mapa">
-				<option value="0">Selecione o ROI</option>
-				<option value="regiao_">Regionais</option>
-				<option value="bairro_">Bairros</option>
-				<option value="cluster_1000">Cluster (k=1000)</option>
-				<option value="cluster_250">Cluster (k=500)</option>
-				<option value="cluster_100">Cluster (k=250)</option>
-				<option value="cluster_50">Cluster (k=100)</option>
-				<option value="cluster_40">Cluster (k=50)</option>
-				<option value="cluster_40">Cluster (k=40)</option>
-				<option value="cluster_30">Cluster (k=30)</option>
-				<option value="cluster_20">Cluster (k=20)</option>
-				<option value="cluster_10">Cluster (k=10)</option>
-				<option value="cluster_05">Cluster (k=05)</option>
-			</select>
-		</div>
-		<div class="row">
-			<button class="btn btn-primary custom" onclick="sessionStorage.setItem('acao','origem');" data-toggle="tooltip" title="Clique aqui para então poder especificar no mapa os ROI de origem">Origem</button>
-		</div>
-		<div class="row">
-			<button class="btn btn-danger custom" onclick="sessionStorage.setItem('acao','destino');" data-toggle="tooltip" title="Clique aqui para então poder especificar no mapa os ROI de destino">Destino</button>
-		</div>
-		<!--
-		<div class="row">
-			<button class="btn btn-warning custom" onclick="limpaMapa()" data-toggle="tooltip" title="Clique aqui para desmarcar de forma facilitada os ROI que porventura estejam selecionados no mapa">Limpar OD</button>
-		</div>
-		-->
-		<div class="row">
-			<select class="form-control custom" id="opcao_terminais" onChange="mudaTerminais()" data-toggle="tooltip" title="Caso queira visualizar os terminais de transporte no mapa, escolha uma das opções aqui disponíveis.">
-				<option value="0">Sem terminais</option>
-				<option value="1">Com terminais</option>
-			</select>
-		</div>
-		<div class="row">
-			<select class="form-control custom" id="opcao_pontos_onibus" onChange="mudaPontosOnibus()" data-toggle="tooltip" title="Caso queira visualizar pontos de ônibus no mapa, escolha uma das opções aqui disponíveis.">
-				<option value="0">Sem Pontos Ônibus</option>
-				<option value="1">Pontos Ônibus Termal</option>
-				<option value="2">Pontos Ônibus Cluster</option>
-			</select>
-		</div>
-		<div class="row">
-			<select class="form-control custom" id="opcao_embarques_desembarques" onChange="mudaVisualizacaoPontosEmbarquesDesembarques()" data-toggle="tooltip" title="Caso queira visualizar pontos de embarque / desembarque, escolha uma das opções aqui disponíveis.">
-				<option value="0">Sem Pontos de emb / desemb</option>
-				<option value="1">Pontos de embarque termal</option>
-				<option value="2">Pontos de desembarque termal</option>
-				<option value="3">Pontos de embarques e desembarque termal</option>
-				<option value="4">Pontos de embarque Cluster</option>
-				<option value="5">Pontos de desembarque Cluster</option>
-				<option value="6">Pontos de embarques e desembarque Cluster</option>
-			</select>
-		</div>
-		<div class="row">
 			<select class="form-control custom" id="sexo" data-toggle="tooltip" title="Caso queira filtrar os dados por sexo, escolha uma das opções aqui disponíveis.">
 				<option value="0">Sexo</option>
 				<option value="1">Sexo feminino</option>

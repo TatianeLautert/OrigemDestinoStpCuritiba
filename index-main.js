@@ -1,3 +1,14 @@
+
+//inicializa gráficos
+const ctx1 = document.getElementById("tres").getContext('2d');
+const ctx2 = document.getElementById("dois").getContext('2d');
+const ctx3 = document.getElementById("um").getContext('2d');
+const ctx4 = document.getElementById("quatro").getContext('2d');
+const ctx5 = document.getElementById("cinco").getContext('2d');
+
+function randomColor() {
+	return '#' + Math.floor(Math.random()*16777215).toString(16);
+}
 //cria um mapa e adiciona as camadas OSM e markercluster
 var map = new L.Map('map', {
   center: {lat: -25.4909541, lng: -49.315137},
@@ -39,7 +50,7 @@ function adicionaCamadasEstaticas() {
 
 	$.ajax({
 		type:'get',
-		url:'bd_unidades.php',
+		url:'api/bd_unidades.php',
 		dataType: 'json',
 		contentType: "application/json;charset=utf-8",
 		success: function(contornos){
@@ -54,20 +65,19 @@ function adicionarMarcadorNoMapa(aux_contornos, nome_camada) {
 	var poligono;
 	var poligonos_da_camada = [];
 	console.log(aux_contornos);
+	var icone_azul = L.icon({
+		iconUrl: "images/blue.png",
+		iconSize: [10, 10]
+	});
 	//itera a lista de rois
 	$.each(aux_contornos, function (i, aux_contorno) {
-		const randomColor ='#' + Math.floor(Math.random()*16777215).toString(16);
-		//cria poligono
 		contorno = JSON.parse(aux_contorno.contorno)[0];
 		console.log(contorno);
 		if (contorno == null) {
 			return;
 		}
-		//
-		poligono = L.marker([contorno.lat, contorno.lng]);
+		poligono = L.marker([contorno.lat, contorno.lng], { icon: icone_azul });
 		poligono.bindPopup(aux_contorno.nome);
-		//adiciona poligono no mapa
-		//map.addLayer(poligono);
 		//adiciona o poligono na lista de rois
 		poligonos_da_camada.push(poligono);
 		if (nome_camada == null) {
@@ -76,6 +86,77 @@ function adicionarMarcadorNoMapa(aux_contornos, nome_camada) {
 	})
 	LAYER_CONTROL.addOverlay(L.layerGroup(poligonos_da_camada), nome_camada);
 }
+
+
+
+
+grafico_qtde_atendimentos_ao_ano = new Chart(ctx4, {
+	type: 'bar',
+	options: {
+		title: {
+			display: true,
+			text: 'QUANTIDADE DE ATENDIMENTOS AO MÊS'
+		},
+		legend: {
+			display: false
+		},
+		scales: {
+			yAxes: [{
+				ticks: {
+					suggestedMin: 0
+				}
+			}]
+		}
+	}
+});
+
+function pesquisarAtendimentos() {
+	let dados = [];
+	let data_inicio = $('#data_inicio').val().split('/').reverse().join('-');
+	let unidade = '00123';
+	$.ajax({
+		type: 'get',
+		url: 'api/bd_quantidade_mes_ano.php',
+		dataType: 'json',
+		contentType: "application/json;charset=utf-8",
+		data: {
+			"unidade": unidade,
+			"ano": data_inicio
+		},
+		success: function (atendimentos) {
+			console.log(atendimentos);
+			$.each(atendimentos, function (i, atendimento) {
+				dados[atendimento.month] = atendimento.count;
+			});
+			pintaGraficosQtdeAtendimentos(dados);
+		}
+	});
+}
+
+
+function pintaGraficosQtdeAtendimentos(dados) {
+
+	console.log(dados);
+
+	grafico_qtde_atendimentos_ao_ano.data = {
+		labels: Object.keys(dados),
+		datasets: [
+			{
+				label: 'Quantidade de atendimentos',
+				data: Object.values(dados),
+				backgroundColor: Array.from(Array(12), (e,i)=> randomColor()),
+				//borderColor: ["rgb(255,0,0)", "rgb(0,0,255)", "rgb(0,255,0)"],
+				borderWidth: 1,
+				fill: false
+			}
+		]
+	};
+
+	grafico_qtde_atendimentos_ao_ano.update();
+}
+
+pesquisarAtendimentos();
+
 
 
 //cria uma camada de heatmap
@@ -143,12 +224,6 @@ var marcadores_desembarque = [];
 sessionStorage.setItem('origens_selecionadas', '[]');
 sessionStorage.setItem('destinos_selecionados', '[]');
 
-//inicializa gráficos
-ctx1 = document.getElementById("tres").getContext('2d');
-ctx2 = document.getElementById("quatro").getContext('2d');
-ctx3 = document.getElementById("um").getContext('2d');
-ctx4 = document.getElementById("dois").getContext('2d');
-ctx5 = document.getElementById("cinco").getContext('2d');
 
 grafico_linhas_embarque_sexo_hora = new Chart(ctx1, {
 	type: 'line',
@@ -244,25 +319,6 @@ grafico_barras_faixa_etaria = new Chart(ctx3, {
 	}
 });
 
-grafico_barras_sexo = new Chart(ctx4, {
-	type: 'horizontalBar',
-	options: {
-		title: {
-			display: true,
-			text: 'TOTAL DE EMBARQUES POR SEXO'
-		},
-		legend: {
-			display: false
-		},
-		scales: {
-			yAxes: [{
-				ticks: {
-					suggestedMin: 0
-				}
-			}]
-		}
-	}
-});
 
 function mudaPoligonos() {
 		
@@ -314,8 +370,8 @@ function adicionaPoligonosNoMapa(aux_contornos, nome_camada, habilitar) {
 	var poligonos_da_camada = [];
 	console.log(aux_contornos);
 	//itera a lista de rois
-	$.each(aux_contornos, function (i, aux_contorno) {
-		const randomColor ='#' + Math.floor(Math.random()*16777215).toString(16);
+	aux_contornos.forEach((aux_contorno) => {
+		let randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
 		//cria poligono
 		poligono = L.polygon(eval(aux_contorno.contorno),{
 			stroke: true,
@@ -791,13 +847,13 @@ function pesquisar(){
 				//console.log(movimentacoes);
 				
 				var aux_idx;
-				
+
 				//cria o ícone do marcador de embarque
 				var icone_embarque = L.icon({
 					iconUrl: "images/blue.png",
 					iconSize: [10, 10]
 				});
-				
+
 				//cria o ícone do marcador de embarque
 				var icone_desembarque = L.icon({
 					iconUrl: "images/red.png",

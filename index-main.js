@@ -53,13 +53,23 @@ function adicionaCamadasEstaticas() {
 		url:'api/bd_unidades.php',
 		dataType: 'json',
 		contentType: "application/json;charset=utf-8",
-		success: function(contornos){
+		success: function(contornos) {
+			criarComboUnidades(contornos);
 			adicionarMarcadorNoMapa(contornos, 'UMS');
 		}
 	});
 }
 
 adicionaCamadasEstaticas();
+
+function criarComboUnidades(aux_contornos) {
+	$.each(aux_contornos, function (index, unidade) {
+		$('#unidade').append($('<option/>', {
+			value: unidade.id,
+			text : unidade.nome
+		}));
+	});
+}
 
 function adicionarMarcadorNoMapa(aux_contornos, nome_camada) {
 	var poligono;
@@ -72,7 +82,6 @@ function adicionarMarcadorNoMapa(aux_contornos, nome_camada) {
 	//itera a lista de rois
 	$.each(aux_contornos, function (i, aux_contorno) {
 		contorno = JSON.parse(aux_contorno.contorno)[0];
-		console.log(contorno);
 		if (contorno == null) {
 			return;
 		}
@@ -83,11 +92,9 @@ function adicionarMarcadorNoMapa(aux_contornos, nome_camada) {
 		if (nome_camada == null) {
 			nome_camada = aux_contorno.nome;
 		}
-	})
+	});
 	LAYER_CONTROL.addOverlay(L.layerGroup(poligonos_da_camada), nome_camada);
 }
-
-
 
 
 grafico_qtde_atendimentos_ao_ano = new Chart(ctx4, {
@@ -112,8 +119,8 @@ grafico_qtde_atendimentos_ao_ano = new Chart(ctx4, {
 
 function pesquisarAtendimentos() {
 	let dados = [];
-	let data_inicio = $('#data_inicio').val().split('/').reverse().join('-');
-	let unidade = '00123';
+	let ano = $('#ano').val();
+	let unidade = $('#unidade').val();
 	$.ajax({
 		type: 'get',
 		url: 'api/bd_quantidade_mes_ano.php',
@@ -121,7 +128,7 @@ function pesquisarAtendimentos() {
 		contentType: "application/json;charset=utf-8",
 		data: {
 			"unidade": unidade,
-			"ano": data_inicio
+			"ano": ano
 		},
 		success: function (atendimentos) {
 			console.log(atendimentos);
@@ -721,306 +728,37 @@ function adicionaMarkerClustererPontosOnibus() {
 	});
 }
 
-function limpaPontosOnibus(){
-	
-	//remove heatmap
-	if(map.hasLayer(heatmap)){
-		map.removeLayer(heatmap);
-	}
-	
-	//remove marker cluster
-	if(map.hasLayer(markerCluster_pontos)){
-		markerCluster_pontos.removeLayers(marcadores_pontos_onibus);
-		map.removeLayer(markerCluster_pontos);
-	}
-}
+function pesquisar() {
 
-function pesquisar(){
-	
-	pontos_embarque = [];
-	pontos_desembarque = [];
-	
-	marcadores_embarque = [];
-	marcadores_desembarque = [];
-					
-	//busca da sessão a lista de origens e destinos selecionados
-	origens_selecionadas = sessionStorage.getItem('origens_selecionadas');
-	destinos_selecionados = sessionStorage.getItem('destinos_selecionados');
-	
-	//inicializa variáveis
-	sum = 0;
-	histEmbarquesFull = [];
-	
-	var aux_origens = JSON.parse(origens_selecionadas);
-	var aux_destinos = JSON.parse(destinos_selecionados);
-	
-	if((aux_origens.length == 0) || (aux_destinos.length == 0) ){
-		
-		alert('Selecione ao menos 01 origem e 01 destino no mapa');
-		
-	}else{
-		
-		//define variaveis
-		var data, hora, data_inicio, data_fim, hora_inicio, hora_fim;
-	
-		//ajusta datas
-		data_inicio = $('#data_inicio').val().split('/').reverse().join('-');
-		data_fim = $('#data_fim').val().split('/').reverse().join('-');
-		
-		hora_inicio = $('#hora_inicio').val();
-		hora_fim = $('#hora_fim').val();
-		
-		if(!Date.parse(data_inicio) || !Date.parse(data_fim)){
-			
-			alert('Selecione um período para efetuar a pesquisa');
-			return 0;
-			
-		}else{
-			
-			if(Date.parse(data_inicio) > Date.parse(data_fim)){
-				
-				alert('A data final não pode ser menor que a inicial.');
-				return 0;
-				
-			}else{
-				
-				if(hora_inicio === '' || hora_fim === ''){
-				
-					alert('É necessário definir um intervalo de horários para efetuar a consulta.');
-					return 0;
-					
-				}
-			}
-		}
-		
-		var tipo_roi = $('#tipo_roi').val();
-		var sexo = $('#sexo').val();
-		var idade = $('#idade').val();
-		
-		grafico = [];
-		
-		var linhas_fluxo = [];
-		
-		grafico['sexo'] = [];
-		grafico['sexo']['M'] = 0;
-		grafico['sexo']['F'] = 0;
-		grafico['sexo']['Não Inf.'] = 0;
-		
-		grafico['sexo_horario_M'] = [];
-		grafico['sexo_horario_F'] = [];
-		grafico['sexo_horario_NI'] = [];
-		
-		grafico['idade'] = [];
-		
-		grafico['faixa_etaria'] = [];
-		grafico['faixa_etaria']['De 0 a 5 anos'] = 0;
-		grafico['faixa_etaria']['De 5 a 12 anos'] = 0;
-		grafico['faixa_etaria']['De 12 a 18 anos'] = 0;
-		grafico['faixa_etaria']['De 18 a 65 anos'] = 0;
-		grafico['faixa_etaria']['Acima de 65 anos'] = 0;
-		grafico['faixa_etaria']['Idade menor que 0'] = 0;
-		grafico['faixa_etaria']['Idade não informada'] = 0;
-		
-		grafico['faixa_etaria_0_5'] = [];
-		grafico['faixa_etaria_5_12'] = [];
-		grafico['faixa_etaria_12_18'] = [];
-		grafico['faixa_etaria_18_65'] = [];
-		grafico['faixa_etaria_>65'] = [];
-		grafico['faixa_etaria_<0'] = [];
-		grafico['faixa_etaria_ninf'] = [];
-		
-		grafico['embarque'] = [];
-		
-		$.ajax({
-			type:'get',
-			url:'bd_movimentacao.php',
-			dataType: 'json',
-			//dataType: 'text',
-			contentType: "application/json;charset=utf-8",
-			data: {
-				"origens_selecionadas": origens_selecionadas, "destinos_selecionados": destinos_selecionados, 
-				"data_inicio": data_inicio, "data_fim": data_fim, 
-				"hora_inicio": hora_inicio, "hora_fim": hora_fim, 
-				"tipo_roi": tipo_roi, "sexo" : sexo, "idade": idade},
-			success: function(movimentacoes){
-				
-				//console.log(movimentacoes);
-				
-				var aux_idx;
-
-				//cria o ícone do marcador de embarque
-				var icone_embarque = L.icon({
-					iconUrl: "images/blue.png",
-					iconSize: [10, 10]
-				});
-
-				//cria o ícone do marcador de embarque
-				var icone_desembarque = L.icon({
-					iconUrl: "images/red.png",
-					iconSize: [10, 10]
-				});
-				
-				tipo_roi = $('#tipo_roi').val();
-				sexo = $('#sexo').val();
-				idade = $('#idade').val();
-				
-				$.each(movimentacoes, function (i, movimentacao) {
-					
-					//coleta dados sobre sexo
-					switch(movimentacao.cartao_sexo){
-						case 'M':
-							grafico['sexo']['M'] += 1;
-							
-							if(grafico['sexo_horario_M'][movimentacao.datahora_formatada] == undefined){
-								grafico['sexo_horario_M'][movimentacao.datahora_formatada] = 1;
-							}else{
-								grafico['sexo_horario_M'][movimentacao.datahora_formatada] += 1;
-							}
-							
-							break;
-						
-						case 'F':
-							grafico['sexo']['F'] += 1;
-							
-							if(grafico['sexo_horario_F'][movimentacao.datahora_formatada] == undefined){
-								grafico['sexo_horario_F'][movimentacao.datahora_formatada] = 1;
-							}else{
-								grafico['sexo_horario_F'][movimentacao.datahora_formatada] += 1;
-							}
-							
-							break;
-							
-						default:
-							grafico['sexo']['Não Inf.'] += 1;
-							
-							if(grafico['sexo_horario_NI'][movimentacao.datahora_formatada] == undefined){
-								grafico['sexo_horario_NI'][movimentacao.datahora_formatada] = 1;
-							}else{
-								grafico['sexo_horario_NI'][movimentacao.datahora_formatada] += 1;
-							}
-					}
-						
-					//coleta dados sobre idade
-					aux_idx = (movimentacao.idade == undefined) ? 'x' : movimentacao.idade;
-					if(grafico['idade'][aux_idx] != undefined){
-						grafico['idade'][aux_idx] += 1;
-					}else{
-						grafico['idade'][aux_idx] = 1;
-					}
-					
-					//coleta dados sobre faixa etaria
-					if ( ( movimentacao.idade < 0 ) && ( idade == 6 || idade == 0 ) ){
-						
-						grafico['faixa_etaria']['Idade menor que 0'] += 1;
-						
-						if(grafico['faixa_etaria_<0'][movimentacao.datahora_formatada] == undefined){
-							grafico['faixa_etaria_<0'][movimentacao.datahora_formatada] = 1;
-						}else{
-							grafico['faixa_etaria_<0'][movimentacao.datahora_formatada] += 1;
-						}
-						
-					}else{
-						if ( ( movimentacao.idade == undefined || movimentacao.idade.trim() == '' || movimentacao.idade == null || movimentacao.idade == 0 ) && ( idade == 7 || idade == 0 ) ){
-							
-							grafico['faixa_etaria']['Idade não informada'] += 1;
-							
-							if(grafico['faixa_etaria_ninf'][movimentacao.datahora_formatada] == undefined){
-								grafico['faixa_etaria_ninf'][movimentacao.datahora_formatada] = 1;
-							}else{
-								grafico['faixa_etaria_ninf'][movimentacao.datahora_formatada] += 1;
-							}
-							
-						}else{
-							if ( ( movimentacao.idade > 0 && movimentacao.idade < 5 ) && ( idade = 1 || idade == 0 ) ){
-								
-								grafico['faixa_etaria']['De 0 a 5 anos'] += 1;
-								
-								if(grafico['faixa_etaria_0_5'][movimentacao.datahora_formatada] == undefined){
-									grafico['faixa_etaria_0_5'][movimentacao.datahora_formatada] = 1;
-								}else{
-									grafico['faixa_etaria_0_5'][movimentacao.datahora_formatada] += 1;
-								}
-								
-							}else{
-								if ( ( movimentacao.idade >= 5 && movimentacao.idade < 12 ) && ( idade == 2 || idade == 0 ) ){
-									
-									grafico['faixa_etaria']['De 5 a 12 anos'] += 1;
-									
-									if(grafico['faixa_etaria_5_12'][movimentacao.datahora_formatada] == undefined){
-										grafico['faixa_etaria_5_12'][movimentacao.datahora_formatada] = 1;
-									}else{
-										grafico['faixa_etaria_5_12'][movimentacao.datahora_formatada] += 1;
-									}
-									
-								}else{
-									if ( ( movimentacao.idade >= 12 && movimentacao.idade < 18 ) && ( idade == 3 || idade == 0 )){
-										
-										grafico['faixa_etaria']['De 12 a 18 anos'] += 1;
-										
-										if(grafico['faixa_etaria_12_18'][movimentacao.datahora_formatada] == undefined){
-											grafico['faixa_etaria_12_18'][movimentacao.datahora_formatada] = 1;
-										}else{
-											grafico['faixa_etaria_12_18'][movimentacao.datahora_formatada] += 1;
-										}
-										
-									}else{
-										if ( ( movimentacao.idade >= 18 && movimentacao.idade < 65 ) && ( idade == 4 || idade == 0 )){
-											
-											grafico['faixa_etaria']['De 18 a 65 anos'] += 1;
-											
-											if(grafico['faixa_etaria_18_65'][movimentacao.datahora_formatada] == undefined){
-												grafico['faixa_etaria_18_65'][movimentacao.datahora_formatada] = 1;
-											}else{
-												grafico['faixa_etaria_18_65'][movimentacao.datahora_formatada] += 1;
-											}
-											
-										}else{
-											
-											grafico['faixa_etaria']['Acima de 65 anos'] += 1;
-											
-											if(grafico['faixa_etaria_>65'][movimentacao.datahora_formatada] == undefined){
-												grafico['faixa_etaria_>65'][movimentacao.datahora_formatada] = 1;
-											}else{
-												grafico['faixa_etaria_>65'][movimentacao.datahora_formatada] += 1;
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-					
-					//coleta dados sobre data-hora embarques
-					if(grafico['embarque'][movimentacao.datahora_formatada] != undefined){
-						grafico['embarque'][movimentacao.datahora_formatada] += 1;
-					}else{
-						grafico['embarque'][movimentacao.datahora_formatada] = 1;
-					}
-					
-					sum += 1;
-
-					//monta um array de pontos de embarque
-					obj = { lat: movimentacao.origem_lat, lng: movimentacao.origem_lng};
-					pontos_embarque.push(obj);
-
-					//monta um array de pontos de desembarque
-					obj = { lat: movimentacao.destino_lat, lng: movimentacao.destino_lng};
-					pontos_desembarque.push(obj);
-					
-					//monta um array de marcadores de embarque
-					marcador = L.marker({lat: movimentacao.origem_lat, lng: movimentacao.origem_lng});
-					marcadores_embarque.push(marcador);
-					
-					//monta um array de marcadores de embarque
-					marcador = L.marker({lat: movimentacao.destino_lat, lng: movimentacao.destino_lng});
-					marcadores_desembarque.push(marcador);
-				});	
-				
-				pintaGraficos();
-				
-			}
-		});
-	}
+	pesquisarAtendimentos();
+		// $.ajax({
+		// 	type:'get',
+		// 	url:'bd_movimentacao.php',
+		// 	dataType: 'json',
+		// 	//dataType: 'text',
+		// 	contentType: "application/json;charset=utf-8",
+		// 	data: {
+		// 		"origens_selecionadas": origens_selecionadas, "destinos_selecionados": destinos_selecionados,
+		// 		"data_inicio": data_inicio, "data_fim": data_fim,
+		// 		"hora_inicio": hora_inicio, "hora_fim": hora_fim,
+		// 		"tipo_roi": tipo_roi, "sexo" : sexo, "idade": idade},
+		// 	success: function(movimentacoes){
+		//
+		// 		//console.log(movimentacoes);
+		//
+		// 		var aux_idx;
+		//
+		// 		//cria o ícone do marcador de embarque
+		// 		var icone_embarque = L.icon({
+		// 			iconUrl: "images/blue.png",
+		// 			iconSize: [10, 10]
+		// 		});
+		//
+		// 		//cria o ícone do marcador de embarque
+		// 		var icone_desembarque = L.icon({
+		// 			iconUrl: "images/red.png",
+		// 			iconSize: [10, 10]
+		// 		});
 }
 
 function pintaGraficos(){

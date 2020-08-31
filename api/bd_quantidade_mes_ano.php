@@ -1,10 +1,24 @@
 <?php
 
-$sql = "select cod_unidade, desc_unidade, month, year, count from public.qtd_atendimento_mes_ano where year =  2018 and cod_unidade = '0016705'";
+$sql = "select month, sum(count) as count from public.qtd_atendimento_mes_ano ";
+$sqlwhere = "";
+$params = array();
 
+if (!empty($_GET['ano'])) {
+    $sqlwhere = " year = $1 ";
+    array_push($params, $_GET['ano']);
+}
+
+if (!empty($_GET['unidade'])) {
+    $sqlwhere .= ($sqlwhere != "" ? " and " : "") . " cod_unidade::integer = (select cod_unidade_org_dados_saude from mapeamento_unidade_saude where gid = " . ($sqlwhere != "" ? "$2" : "$1")  . ")";
+    array_push($params, $_GET['unidade']);
+}
+
+$sql .=  ($sqlwhere != "" ? " WHERE " . $sqlwhere : "") .  " group by month";
+
+error_log($sql);
 $conexao = pg_connect('host=localhost port=5435 dbname=postgiscwb user=postread password=PostRead');
-
-$resultado = pg_query($conexao, $sql);
+$resultado = pg_query_params($conexao, $sql, $params);
 
 $rows = [];		
 while ($row = pg_fetch_assoc($resultado)) {

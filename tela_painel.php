@@ -5,51 +5,31 @@
 	<div id="todo">
 
 		<div class="row">
-			<!--campos de data-->
-			<div class="input-group date form_date custom" data-toggle="tooltip" title="Informe a data de início do período a ser analisado">
-				<input class="form-control" type="text" id="data_inicio">
-				<span class="input-group-addon"><span class="glyphicon glyphicon-th"></span></span>
+			<!--Filtros da quantidade por mês-->
+			<div class="input-group custom"
+                 title="Caso queira filtrar os dados por ano, escolha uma opção.">
+				<span class="input-group-addon">Ano</span>
+                <select  class="form-control" id="ano">
+                    <option value="">Todos</option>
+                    <option value="2019">2019</option>
+                    <option value="2018">2018</option>
+                    <option value="2017">2017</option>
+                    <option value="2016">2016</option>
+                </select>
 			</div>
-		
-			<div class="input-group date form_date custom" data-toggle="tooltip" title="Informe a data de término do período a ser analisado">
-				<input class="form-control" type="text" id="data_fim">
-				<span class="input-group-addon"><span class="glyphicon glyphicon-th"></span></span>
-			</div>
-		<!--campos de data-->
-		
-		<!--campos de hora-->
-			<div class="input-group bootstrap-timepicker custom" data-toggle="tooltip" title="Informe o horário de início do período a ser analisado">
-				<input class="form-control" type="text" id="hora_inicio">
-				<span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span>
-			</div>
-			
-			<div class="input-group bootstrap-timepicker custom" data-toggle="tooltip" title="Informe o horário de término do período a ser analisado">
-				<input class="form-control" type="text" id="hora_fim">
-				<span class="input-group-addon"><i class="glyphicon glyphicon-time"></i></span>
-			</div>
-		<!--campos de hora-->
-		</div>
+        </div>
 
-		<div class="row">
-			<select class="form-control custom" id="sexo" data-toggle="tooltip" title="Caso queira filtrar os dados por sexo, escolha uma das opções aqui disponíveis.">
-				<option value="0">Sexo</option>
-				<option value="1">Sexo feminino</option>
-				<option value="2">Sexo masculino</option>
-				<option value="3">Sexo não informado</option>
-			</select>
-		</div>
-		<div class="row">
-			<select class="form-control custom" id="idade" data-toggle="tooltip" title="Caso queira filtrar os dados por faixa etária, escolha uma das opções aqui disponíveis.">
-				<option value="0">Faixa etária</option>
-				<option value="1">Menores de 5 anos</option>
-				<option value="2">Idade de 5 até 12 anos</option>
-				<option value="3">Idade de 12 até 18 anos</option>
-				<option value="4">Idade de 18 até 65 anos</option>
-				<option value="5">Idade de 65 anos em diante</option>
-				<option value="6">Idade menor que 0</option>
-				<option value="7">Idade não informada</option>
-			</select>
-		</div>
+        <div class="row">
+            <!--Filtros da quantidade por mês-->
+            <div class="input-group custom"
+                 title="Caso queira filtrar os dados por ano, escolha uma opção.">
+                <span class="input-group-addon">Unidade</span>
+                <select class="form-control" id="unidade">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+        </div>
+
 		<div class="row">
 			<button class="btn btn-success custom" onclick="pesquisar()" data-toggle="tooltip" title="Após definir os parâmetros de consulta, clique aqui para efetuar a pesquisa">Pesquisar</button>				
 		</div>

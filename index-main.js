@@ -1,4 +1,6 @@
 
+
+
 //inicializa gráficos
 const ctx1 = document.getElementById("tres").getContext('2d');
 const ctx2 = document.getElementById("dois").getContext('2d');
@@ -26,6 +28,9 @@ L.control.scale({metric: true, imperial: false}).addTo(map);
 const LAYER_CONTROL = L.control.layers({"OSM": camada_OSM}, {});
 LAYER_CONTROL.addTo(map);
 
+let unidadesSaude = [];
+let layerUnidadeSaudeSelecionada;
+
 function adicionaCamadasEstaticas() {
 	$.ajax({
 		type:'get',
@@ -43,8 +48,8 @@ function adicionaCamadasEstaticas() {
 		dataType: 'json',
 		contentType: "application/json;charset=utf-8",
 		data: {"tipo_roi": 'regiao'},
-		success: function(contornos){
-			adicionaPoligonosNoMapa(contornos, 'Região', false);
+		success: function(regioes) {
+			adicionaPoligonosNoMapa(regioes, 'Região', false);
 		}
 	});
 
@@ -53,9 +58,10 @@ function adicionaCamadasEstaticas() {
 		url:'api/bd_unidades.php',
 		dataType: 'json',
 		contentType: "application/json;charset=utf-8",
-		success: function(contornos) {
-			criarComboUnidades(contornos);
-			adicionarMarcadorNoMapa(contornos, 'UMS');
+		success: function(unidades) {
+			unidadesSaude = unidades;
+			criarComboUnidades(unidades);
+			adicionarMarcadorNoMapa(unidades, 'UMS');
 		}
 	});
 }
@@ -71,29 +77,28 @@ function criarComboUnidades(aux_contornos) {
 	});
 }
 
-function adicionarMarcadorNoMapa(aux_contornos, nome_camada) {
-	var poligono;
+function adicionarMarcadorNoMapa(aux_contornos, nome_camada, nome_icone = "blue.png") {
 	var poligonos_da_camada = [];
-	console.log(aux_contornos);
+	console.debug(aux_contornos);
 	var icone_azul = L.icon({
-		iconUrl: "images/blue.png",
-		iconSize: [10, 10]
+		iconUrl: "images/" + nome_icone//,		iconSize: [10, 10]
 	});
-	//itera a lista de rois
+
 	$.each(aux_contornos, function (i, aux_contorno) {
 		contorno = JSON.parse(aux_contorno.contorno)[0];
 		if (contorno == null) {
 			return;
 		}
-		poligono = L.marker([contorno.lat, contorno.lng], { icon: icone_azul });
+		let poligono = L.marker([contorno.lat, contorno.lng], { icon: icone_azul });
 		poligono.bindPopup(aux_contorno.nome);
-		//adiciona o poligono na lista de rois
 		poligonos_da_camada.push(poligono);
 		if (nome_camada == null) {
 			nome_camada = aux_contorno.nome;
 		}
 	});
-	LAYER_CONTROL.addOverlay(L.layerGroup(poligonos_da_camada), nome_camada);
+	let grupo = L.layerGroup(poligonos_da_camada);
+	LAYER_CONTROL.addOverlay(grupo, nome_camada);
+	return grupo;
 }
 
 
@@ -102,7 +107,7 @@ grafico_qtde_atendimentos_ao_ano = new Chart(ctx4, {
 	options: {
 		title: {
 			display: true,
-			text: 'QUANTIDADE DE ATENDIMENTOS AO MÊS'
+			text: 'QUANTIDADE DE ATENDIMENTOS MENSAL'
 		},
 		legend: {
 			display: false
@@ -121,6 +126,9 @@ function pesquisarAtendimentos() {
 	let dados = [];
 	let ano = $('#ano').val();
 	let unidade = $('#unidade').val();
+
+	marcarUnidadeDeSaudeNoMapa(unidade);
+
 	$.ajax({
 		type: 'get',
 		url: 'api/bd_quantidade_mes_ano.php',
@@ -131,20 +139,34 @@ function pesquisarAtendimentos() {
 			"ano": ano
 		},
 		success: function (atendimentos) {
-			console.log(atendimentos);
+			console.debug(atendimentos);
 			$.each(atendimentos, function (i, atendimento) {
 				dados[atendimento.month] = atendimento.count;
 			});
-			pintaGraficosQtdeAtendimentos(dados);
+			pintaGraficosQtdeAtendimentos(dados, ano, $('#unidade option:selected').text());
 		}
 	});
 }
 
+function marcarUnidadeDeSaudeNoMapa(unidade) {
+	if (unidade !== "" && unidadesSaude.length !== 0) {
+		let nome_camada_unidade_selecionada = "Unidade Selecionada";
+		if(map.hasLayer(layerUnidadeSaudeSelecionada)){
+			map.removeLayer(layerUnidadeSaudeSelecionada);
+		}
+		unidadesSaude.forEach((us) => {
+			if (us.id === unidade) {
+				layerUnidadeSaudeSelecionada = adicionarMarcadorNoMapa([us], nome_camada_unidade_selecionada, "marker-icon.png");
+				map.addLayer(layerUnidadeSaudeSelecionada);
+				LAYER_CONTROL.removeLayer(layerUnidadeSaudeSelecionada);
+			}
+		});
+	}
+}
 
-function pintaGraficosQtdeAtendimentos(dados) {
 
-	console.log(dados);
-
+function pintaGraficosQtdeAtendimentos(dados, ano, unidade) {
+	console.debug(dados);
 	grafico_qtde_atendimentos_ao_ano.data = {
 		labels: Object.keys(dados),
 		datasets: [
@@ -158,6 +180,7 @@ function pintaGraficosQtdeAtendimentos(dados) {
 			}
 		]
 	};
+	grafico_qtde_atendimentos_ao_ano.options.title.text = 'QUANTIDADE DE ATENDIMENTOS MENSAL ' + ano + ' ' + unidade;
 
 	grafico_qtde_atendimentos_ao_ano.update();
 }
@@ -376,7 +399,7 @@ function adicionaPoligonosNoMapa(aux_contornos, nome_camada, habilitar) {
 	var poligono;
 	var poligonos_da_camada = [];
 	console.log(aux_contornos);
-	//itera a lista de rois
+
 	aux_contornos.forEach((aux_contorno) => {
 		let randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
 		//cria poligono

@@ -101,12 +101,12 @@ function adicionarMarcadorNoMapa(aux_contornos, nome_camada, nome_icone = "blue.
 	return grupo;
 }
 
-grafico_qtde_atendimentos_genro_faixa_etaria = new Chart(ctx4, {
+grafico_qtde_atendimentos_ao_ano = new Chart(ctx1, {
 	type: 'bar',
 	options: {
 		title: {
 			display: true,
-			text: 'QUANTIDADES DE ATENDIMENTO POR FAIXA ETÁRIA E GÊNERO'
+			text: 'QUANTIDADE DE ATENDIMENTOS MENSAL'
 		},
 		legend: {
 			display: false
@@ -121,13 +121,32 @@ grafico_qtde_atendimentos_genro_faixa_etaria = new Chart(ctx4, {
 	}
 });
 
-
-grafico_qtde_atendimentos_ao_ano = new Chart(ctx1, {
+grafico_qtde_atendimentos_genero_faixa_etaria = new Chart(ctx4, {
 	type: 'bar',
 	options: {
 		title: {
 			display: true,
-			text: 'QUANTIDADE DE ATENDIMENTOS MENSAL'
+			text: 'QUANTIDADES DE ATENDIMENTO POR FAIXA ETÁRIA E GÊNERO'
+		},
+		legend: {
+			position: 'right'
+		},
+		scales: {
+			yAxes: [{
+				ticks: {
+					suggestedMin: 0
+				}
+			}]
+		}
+	}
+});
+
+grafico_qtde_atendimentos_por_hora_dia_da_semana = new Chart(ctx5, {
+	type: 'line',
+	options: {
+		title: {
+			display: true,
+			text: 'QUANTIDADE DE ATENDIMENTO POR HORA E DIA DA SEMANA'
 		},
 		legend: {
 			display: false
@@ -168,34 +187,6 @@ function pesquisarAtendimentos() {
 	});
 }
 
-function pesquisarGeneroFaixaEtaria() {
-	let dados = [];
-	let ano = $('#ano').val();
-	let mes = $('#mes').val();
-	let unidade = $('#unidade').val();
-	let genero = $('#genero').val();
-
-	$.ajax({
-		type: 'get',
-		url: 'api/bd_genero_faixa_etaria.php',
-		dataType: 'json',
-		contentType: "application/json;charset=utf-8",
-		data: {
-			"unidade": unidade,
-			"ano": ano,
-			"mes": mes,
-			"genero": genero
-		},
-		success: function (atendimentos) {
-			console.debug(atendimentos);
-			$.each(atendimentos, function (i, atendimento) {
-				dados[atendimento.month] = atendimento.count;
-			});
-			preencherGraficosFaixaEtariaGenero(dados, ano, mes, genero, $('#unidade option:selected').text());
-		}
-	});
-}
-
 function marcarUnidadeDeSaudeNoMapa(unidade) {
 	if (unidade !== "" && unidadesSaude.length !== 0) {
 		let nome_camada_unidade_selecionada = "Unidade Selecionada";
@@ -212,7 +203,6 @@ function marcarUnidadeDeSaudeNoMapa(unidade) {
 	}
 }
 
-
 function pintaGraficosQtdeAtendimentos(dados, ano, unidade) {
 	console.debug(dados);
 	grafico_qtde_atendimentos_ao_ano.data = {
@@ -222,20 +212,112 @@ function pintaGraficosQtdeAtendimentos(dados, ano, unidade) {
 				label: 'Quantidade de atendimentos',
 				data: Object.values(dados),
 				backgroundColor: Array.from(Array(12), (e,i)=> randomColor()),
-				//borderColor: ["rgb(255,0,0)", "rgb(0,0,255)", "rgb(0,255,0)"],
 				borderWidth: 1,
 				fill: false
 			}
 		]
 	};
 	grafico_qtde_atendimentos_ao_ano.options.title.text = 'QUANTIDADE DE ATENDIMENTOS MENSAL ' + ano + ' ' + unidade;
-
 	grafico_qtde_atendimentos_ao_ano.update();
 }
 
-function preencherGraficosFaixaEtariaGenero(dados, ano, mes, genero, unidade) {
-	//FIXME implementar
-	grafico_qtde_atendimentos_genro_faixa_etaria.update();
+function pesquisarGeneroFaixaEtaria() {
+	let dataset = [{
+		label: 'M',
+		backgroundColor: 'blue',
+		data: []
+	}, {
+		label: 'F',
+		backgroundColor: 'pink',
+		data: []
+	}];
+	let labels = new Set();
+	let ano = $('#ano').val();
+	let mes = $('#mes').val();
+	let unidade = $('#unidade').val();
+
+	$.ajax({
+		type: 'get',
+		url: 'api/bd_genero_faixa_etaria.php',
+		dataType: 'json',
+		contentType: "application/json;charset=utf-8",
+		data: {
+			"unidade": unidade,
+			"ano": ano,
+			"mes": mes
+		},
+		success: function (atendimentos) {
+			$.each(atendimentos, function (i, atendimento) {
+				labels.add(atendimento.faixa_etaria);
+				dataset.forEach(ds => {
+					if (ds.label === atendimento.genero) {
+						ds.data.push(atendimento.total);
+					}
+				});
+			});
+
+			preencherGraficosFaixaEtariaGenero(Array.from(labels), dataset, ano, mes, $('#unidade option:selected').text());
+		}
+	});
+}
+
+function preencherGraficosFaixaEtariaGenero(labels, dataset, ano, mes, unidade) {
+	grafico_qtde_atendimentos_genero_faixa_etaria.data =  {
+		labels: labels,
+		datasets: dataset
+	};
+	grafico_qtde_atendimentos_genero_faixa_etaria.options.title.text = 'QUANTIDADES DE ATENDIMENTO POR FAIXA ETÁRIA E GÊNERO '
+		+ (mes != '' ? mes + '/' : '') + ano + ' ' + unidade;
+	grafico_qtde_atendimentos_genero_faixa_etaria.update();
+}
+
+function pesquisarHoraDiaDaSemana() {
+	let ano = $('#ano').val();
+	let mes = $('#mes').val();
+	let unidade = $('#unidade').val();
+	let dow = $('#dow').val();
+
+	let dados = [];
+	$.ajax({
+		type: 'get',
+		url: 'api/bd_atendimentos_hora_dia_semana.php',
+		dataType: 'json',
+		contentType: "application/json;charset=utf-8",
+		data: {
+			"unidade": unidade,
+			"ano": ano,
+			"mes": mes,
+			"dow": dow
+		},
+		success: function (atendimentos) {
+			console.log(atendimentos);
+			$.each(atendimentos, function (i, atendimento) {
+				dados[atendimento.hour] = atendimento.total;
+			});
+			preencherGraficosHoraDiaDaSemana(dados, ano, mes, dow, $('#unidade option:selected').text());
+		}
+	});
+}
+
+function preencherGraficosHoraDiaDaSemana(dados, ano, mes, dow, unidade) {
+	console.info(dados);
+	grafico_qtde_atendimentos_por_hora_dia_da_semana.data = {
+		labels: Object.keys(dados),
+		datasets: [
+			{
+				label: 'Quantidade de atendimentos por horário',
+				data: Object.values(dados),
+				backgroundColor: Array.from(Array(12), (e,i)=> randomColor()),
+				borderWidth: 1,
+				fill: false
+			}
+		]
+	};
+
+	grafico_qtde_atendimentos_por_hora_dia_da_semana.options.title.text = 'QUANTIDADE DE ATENDIMENTO POR HORÁRIO '
+		+ dow + ' '
+		+ (mes != '' ? mes + '/' : '') + ano + ' ' + unidade;
+	grafico_qtde_atendimentos_por_hora_dia_da_semana.update();
 }
 
 pesquisar();
@@ -306,33 +388,6 @@ var marcadores_desembarque = [];
 //inicializa variáveis de sessão
 sessionStorage.setItem('origens_selecionadas', '[]');
 sessionStorage.setItem('destinos_selecionados', '[]');
-
-
-
-grafico_linhas_embarque_faixa_etaria_hora = new Chart(ctx5, {
-	type: 'line',
-	options: {
-		title: {
-			display: true,
-			text: 'EMBARQUES POR FAIXA ETÁRIA AO LONGO DO PERIODO'
-		},
-		scales: {
-			xAxes: [{
-				ticks: {
-					callback: function(dataLabel, index) {
-						return index % 2 === 0 ? dataLabel : '';
-					},
-					fontSize: 8
-				}
-			}],
-			yAxes: [{
-				ticks: {
-					suggestedMin: 0
-				}
-			}]
-		}
-	}
-});
 
 grafico_barras_idade = new Chart(ctx2, {
 	type: 'bar',
@@ -427,7 +482,7 @@ function removePoligonosDoMapa(){
 function adicionaPoligonosNoMapa(aux_contornos, nome_camada, habilitar) {
 	var poligono;
 	var poligonos_da_camada = [];
-	console.log(aux_contornos);
+	console.debug(aux_contornos);
 
 	aux_contornos.forEach((aux_contorno) => {
 		let randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
@@ -784,6 +839,7 @@ function pesquisar() {
 
 	pesquisarAtendimentos();
 	pesquisarGeneroFaixaEtaria();
+	pesquisarHoraDiaDaSemana();
 		// $.ajax({
 		// 	type:'get',
 		// 	url:'bd_movimentacao.php',

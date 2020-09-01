@@ -34,23 +34,36 @@
                  title="Caso queira filtrar os dados por mês, escolha uma opção.">
                 <span class="input-group-addon">Mês</span>
                 <select class="form-control" id="mes" >
-                    <option value="0">Todos</option>
+                    <option value="">Todos</option>
                     <option value="1">Janeiro</option>
                     <option value="2">Fevereiro</option>
                     <option value="3">Março</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Maio</option>
+                    <option value="6">Junho</option>
+                    <option value="7">Julho</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Setembro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
                 </select>
             </div>
         </div>
 
         <div class="row">
             <div class="input-group custom"
-                 title="Caso queira filtrar os dados por sexo, escolha uma das opções aqui disponíveis.">
-                <span class="input-group-addon">Gênero</span>
-                <select class="form-control" id="sexo">
-                    <option value="0">Todos</option>
-                    <option value="1">Feminino</option>
-                    <option value="2">Masculino</option>
-                    <option value="3">Não informado</option>
+                 title="Caso queira filtrar os dados por dia da semana, escolha uma opção.">
+                <span class="input-group-addon">Dia</span>
+                <select class="form-control" id="dow" >
+                    <option value="">Todos</option>
+                    <option value="0">Domingo</option>
+                    <option value="1">Segunda</option>
+                    <option value="2">Terça</option>
+                    <option value="3">Quarta</option>
+                    <option value="4">Quinta</option>
+                    <option value="5">Sexta</option>
+                    <option value="6">Sábado</option>
                 </select>
             </div>
         </div>

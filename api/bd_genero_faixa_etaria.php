@@ -1,13 +1,16 @@
 <?php
 
-$sql = "select month, sum(count) as count from public.qtd_atendimento_mes_ano ";
-$sqlwhere = "";
+//$sql = "select month, sum(count) as count from public.qtd_atendimento_mes_ano ";
+$sql = "select \"case\" as faixa_etaria, gender as genero, sum(count) as total from public.qtd_atendimento_faixa_etaria_genero";
+//month, year, cod_unidade,
+$sqlwhere = " \"case\" is not null ";
 $params = array();
 
 $indiceQuery = 1;
 
+
 if (!empty($_GET['ano'])) {
-    $sqlwhere = " year = $". $indiceQuery . " ";
+    $sqlwhere .= ($sqlwhere != "" ? " and " : "") . " year = $". $indiceQuery . " ";
     array_push($params, $_GET['ano']);
     $indiceQuery++;
 }
@@ -19,19 +22,13 @@ if (!empty($_GET['unidade'])) {
 }
 
 if (!empty($_GET['mes'])) {
-    $sqlwhere = " month = $". $indiceQuery . " ";
+    $sqlwhere .= ($sqlwhere != "" ? " and " : "") . " month = $". $indiceQuery . " ";
     array_push($params, $_GET['mes']);
     $indiceQuery++;
 }
 
-if (!empty($_GET['genero'])) {
-    $sqlwhere = " genero = $". $indiceQuery . " ";
-    array_push($params, $_GET['genero']);
-    $indiceQuery++;
-}
 
-
-$sql .=  ($sqlwhere != "" ? " WHERE " . $sqlwhere : "") .  " group by month";
+$sql .=  ($sqlwhere != "" ? " WHERE " . $sqlwhere : "") .  " group by faixa_etaria, gender order by faixa_etaria, gender";
 
 error_log($sql);
 $conexao = pg_connect('host=localhost port=5435 dbname=postgiscwb user=postread password=PostRead');

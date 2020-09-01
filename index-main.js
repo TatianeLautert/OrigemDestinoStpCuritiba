@@ -61,7 +61,8 @@ function adicionaCamadasEstaticas() {
 		success: function(unidades) {
 			unidadesSaude = unidades;
 			criarComboUnidades(unidades);
-			adicionarMarcadorNoMapa(unidades, 'UMS');
+			l = adicionarMarcadorNoMapa(unidades, 'UMS');
+			map.addLayer(l);
 		}
 	});
 }
@@ -89,7 +90,15 @@ function adicionarMarcadorNoMapa(aux_contornos, nome_camada, nome_icone = "blue.
 		if (contorno == null) {
 			return;
 		}
-		let poligono = L.marker([contorno.lat, contorno.lng], { icon: icone_azul });
+		let poligono = L.marker([contorno.lat, contorno.lng], { icon: icone_azul })
+			.on('click', function(e) {
+				if (confirm('Filtrar por ' + aux_contorno.nome + '?')) {
+					$("#unidade").val(aux_contorno.id);
+					pesquisar();
+				}
+		}).on('mouseover',function(ev) {
+				ev.target.openPopup();
+			});
 		poligono.bindPopup(aux_contorno.nome);
 		poligonos_da_camada.push(poligono);
 		if (nome_camada == null) {
@@ -224,11 +233,11 @@ function pintaGraficosQtdeAtendimentos(dados, ano, unidade) {
 function pesquisarGeneroFaixaEtaria() {
 	let dataset = [{
 		label: 'M',
-		backgroundColor: 'blue',
+		backgroundColor: 'purple',
 		data: []
 	}, {
 		label: 'F',
-		backgroundColor: 'pink',
+		backgroundColor: 'orange',
 		data: []
 	}];
 	let labels = new Set();
@@ -307,9 +316,7 @@ function preencherGraficosHoraDiaDaSemana(dados, ano, mes, dow, unidade) {
 			{
 				label: 'Quantidade de atendimentos por horário',
 				data: Object.values(dados),
-				backgroundColor: Array.from(Array(12), (e,i)=> randomColor()),
-				borderWidth: 1,
-				fill: false
+				borderWidth: 5
 			}
 		]
 	};
@@ -499,10 +506,6 @@ function adicionaPoligonosNoMapa(aux_contornos, nome_camada, habilitar) {
 			descricao: aux_contorno.nome,
 			tipo_selecao: 0 //se está selecionado como origem (1), como destino (2) ou como ambos (3)
 		});
-		//adiciona poligono no mapa
-		if (habilitar == null || habilitar) {
-			map.addLayer(poligono);
-		}
 		//adiciona o poligono na lista de rois
 		poligonos.push(poligono);
 		poligonos_da_camada.push(poligono);
@@ -510,7 +513,12 @@ function adicionaPoligonosNoMapa(aux_contornos, nome_camada, habilitar) {
 			nome_camada = aux_contorno.nome;
 		}
 	})
-	LAYER_CONTROL.addOverlay(L.layerGroup(poligonos_da_camada), nome_camada);
+	const grupo = L.layerGroup(poligonos_da_camada);
+	LAYER_CONTROL.addOverlay(grupo, nome_camada);
+	//adiciona poligono no mapa
+	if (habilitar == null || habilitar) {
+		map.addLayer(grupo);
+	}
 }
 
 function defineAcoesNosPoligonos(){

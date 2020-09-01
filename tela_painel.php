@@ -20,12 +20,37 @@
         </div>
 
         <div class="row">
-            <!--Filtros da quantidade por mês-->
             <div class="input-group custom"
                  title="Caso queira filtrar os dados por ano, escolha uma opção.">
                 <span class="input-group-addon">Unidade</span>
                 <select class="form-control" id="unidade">
                     <option value="">Todas</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="input-group custom"
+                 title="Caso queira filtrar os dados por mês, escolha uma opção.">
+                <span class="input-group-addon">Mês</span>
+                <select class="form-control" id="mes" >
+                    <option value="0">Todos</option>
+                    <option value="1">Janeiro</option>
+                    <option value="2">Fevereiro</option>
+                    <option value="3">Março</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="input-group custom"
+                 title="Caso queira filtrar os dados por sexo, escolha uma das opções aqui disponíveis.">
+                <span class="input-group-addon">Gênero</span>
+                <select class="form-control" id="sexo">
+                    <option value="0">Todos</option>
+                    <option value="1">Feminino</option>
+                    <option value="2">Masculino</option>
+                    <option value="3">Não informado</option>
                 </select>
             </div>
         </div>
@@ -37,32 +62,7 @@
 </div>
 
 <script type="text/javascript">
-				
-	$('#hora_inicio').timepicker({
-		defaultTime: '00:00',
-		minuteStep: 1,
-		showSeconds: false,
-		showMeridian: false
-	});
-	
-	$('#hora_fim').timepicker({
-		defaultTime: '23:59',
-		minuteStep: 1,
-		showSeconds: false,
-		showMeridian: false
-	});
 
-	$('.form_date').datepicker({
-		format: 'dd/mm/yyyy',
-		language:  'pt-BR',
-		todayBtn:  true,
-		autoclose: true,
-		todayHighlight: true, 
-		showMeridian: false,
-	});
-	
-	$(".form_date").datepicker('setDate', '01/10/2017');
-	
 	$('[data-toggle="tooltip"]').tooltip({
 		placement: 'right',
 		delay: { "show": 2000, "hide": 100 }

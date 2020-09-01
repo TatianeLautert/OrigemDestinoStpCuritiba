@@ -101,8 +101,28 @@ function adicionarMarcadorNoMapa(aux_contornos, nome_camada, nome_icone = "blue.
 	return grupo;
 }
 
+grafico_qtde_atendimentos_genro_faixa_etaria = new Chart(ctx4, {
+	type: 'bar',
+	options: {
+		title: {
+			display: true,
+			text: 'QUANTIDADES DE ATENDIMENTO POR FAIXA ETÁRIA E GÊNERO'
+		},
+		legend: {
+			display: false
+		},
+		scales: {
+			yAxes: [{
+				ticks: {
+					suggestedMin: 0
+				}
+			}]
+		}
+	}
+});
 
-grafico_qtde_atendimentos_ao_ano = new Chart(ctx4, {
+
+grafico_qtde_atendimentos_ao_ano = new Chart(ctx1, {
 	type: 'bar',
 	options: {
 		title: {
@@ -148,6 +168,34 @@ function pesquisarAtendimentos() {
 	});
 }
 
+function pesquisarGeneroFaixaEtaria() {
+	let dados = [];
+	let ano = $('#ano').val();
+	let mes = $('#mes').val();
+	let unidade = $('#unidade').val();
+	let genero = $('#genero').val();
+
+	$.ajax({
+		type: 'get',
+		url: 'api/bd_genero_faixa_etaria.php',
+		dataType: 'json',
+		contentType: "application/json;charset=utf-8",
+		data: {
+			"unidade": unidade,
+			"ano": ano,
+			"mes": mes,
+			"genero": genero
+		},
+		success: function (atendimentos) {
+			console.debug(atendimentos);
+			$.each(atendimentos, function (i, atendimento) {
+				dados[atendimento.month] = atendimento.count;
+			});
+			preencherGraficosFaixaEtariaGenero(dados, ano, mes, genero, $('#unidade option:selected').text());
+		}
+	});
+}
+
 function marcarUnidadeDeSaudeNoMapa(unidade) {
 	if (unidade !== "" && unidadesSaude.length !== 0) {
 		let nome_camada_unidade_selecionada = "Unidade Selecionada";
@@ -185,7 +233,12 @@ function pintaGraficosQtdeAtendimentos(dados, ano, unidade) {
 	grafico_qtde_atendimentos_ao_ano.update();
 }
 
-pesquisarAtendimentos();
+function preencherGraficosFaixaEtariaGenero(dados, ano, mes, genero, unidade) {
+	//FIXME implementar
+	grafico_qtde_atendimentos_genro_faixa_etaria.update();
+}
+
+pesquisar();
 
 
 
@@ -255,30 +308,6 @@ sessionStorage.setItem('origens_selecionadas', '[]');
 sessionStorage.setItem('destinos_selecionados', '[]');
 
 
-grafico_linhas_embarque_sexo_hora = new Chart(ctx1, {
-	type: 'line',
-	options: {
-		title: {
-			display: true,
-			text: 'EMBARQUES POR SEXO AO LONGO DO PERIODO'
-		},
-		scales: {
-			xAxes: [{
-				ticks: {
-					callback: function(dataLabel, index) {
-						return index % 2 === 0 ? dataLabel : '';
-					},
-					fontSize: 8
-				}
-			}],
-			yAxes: [{
-				ticks: {
-					suggestedMin: 0
-				}
-			}]
-		}
-	}
-});
 
 grafico_linhas_embarque_faixa_etaria_hora = new Chart(ctx5, {
 	type: 'line',
@@ -754,6 +783,7 @@ function adicionaMarkerClustererPontosOnibus() {
 function pesquisar() {
 
 	pesquisarAtendimentos();
+	pesquisarGeneroFaixaEtaria();
 		// $.ajax({
 		// 	type:'get',
 		// 	url:'bd_movimentacao.php',
@@ -785,23 +815,6 @@ function pesquisar() {
 }
 
 function pintaGraficos(){
-					
-	//embarques por sexo
-	grafico_barras_sexo.data = {
-		labels: Object.keys(grafico['sexo']),
-		datasets: [
-			{
-				label: 'Embarques por sexo',
-				data: Object.values(grafico['sexo']),
-				backgroundColor:["rgba(255,0,0, 0.5)", "rgba(0,0,255,0.5)", "rgba(0,255,0, 0.5)"],
-				borderColor:["rgb(255,0,0)", "rgb(0,0,255)", "rgb(0,255,0)"],
-				borderWidth:1,
-				fill: false
-			}
-		]
-	};
-	
-	grafico_barras_sexo.update();
 	
 	//embarques por faixa etaria
 	grafico_barras_faixa_etaria.data = {
@@ -834,67 +847,6 @@ function pintaGraficos(){
 	};
 	
 	grafico_barras_idade.update();
-	
-	
-	//embarques por sexo ao longo do período
-	var rotulos = Object.keys(grafico['embarque']);;
-	var aux = [];
-	var i;
-	
-	var average = Number(sum / rotulos.length).toFixed(2);
-	
-	for(i = 0; i < rotulos.length; i++){
-		aux.push(average);
-	}
-						
-	grafico_linhas_embarque_sexo_hora.data = {
-		labels: rotulos,
-		datasets: [
-			{
-				label: 'Média',
-				data: aux,
-				backgroundColor: "rgba(75, 192, 192, 0.5)",
-				borderColor: "rgb(75, 192, 192)",
-				cubicInterpolationMode: 'default',
-				fill: false
-			},
-			{
-				label: 'Total',
-				data: Object.values(grafico['embarque']),
-				backgroundColor: "rgba(255, 0, 0, 0.5)",
-				borderColor: "rgb(255, 0, 0)",
-				cubicInterpolationMode: 'default',
-				fill: false
-			},
-			{
-				label: 'Masculino',
-				data: Object.values(grafico['sexo_horario_M']),
-				backgroundColor: "rgba(0,0,255,0.5)", 
-				borderColor: "rgb(0, 0, 255)",
-				cubicInterpolationMode: 'default',
-				fill: false
-			},
-			{
-				label: 'Feminino',
-				data: Object.values(grafico['sexo_horario_F']),
-				backgroundColor: "rgba(255, 99, 132, 0.5)",
-				borderColor: "rgb(255, 99, 132)",
-				cubicInterpolationMode: 'default',
-				fill: false
-			},
-			{
-				label: 'Não Informado',
-				data: Object.values(grafico['sexo_horario_NI']),
-				backgroundColor: "rgba(0, 255, 0, 0.5)",
-				borderColor: "rgb(0, 255, 0)",
-				cubicInterpolationMode: 'default',
-				fill: false
-			},
-			
-		]
-	};
-	
-	grafico_linhas_embarque_sexo_hora.update();
 	
 	
 	//embarques por faixa etária ao longo do período

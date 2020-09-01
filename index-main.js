@@ -294,7 +294,7 @@ function pesquisarHoraDiaDaSemana() {
 			$.each(atendimentos, function (i, atendimento) {
 				dados[atendimento.hour] = atendimento.total;
 			});
-			preencherGraficosHoraDiaDaSemana(dados, ano, mes, dow, $('#unidade option:selected').text());
+			preencherGraficosHoraDiaDaSemana(dados, ano, mes, $('#dow option:selected').text(), $('#unidade option:selected').text());
 		}
 	});
 }

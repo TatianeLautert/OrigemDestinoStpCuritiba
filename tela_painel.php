@@ -68,6 +68,23 @@
             </div>
         </div>
 
+        <div class="row">
+            <div class="input-group custom"
+                 title="Selecione o código do CID para os dados de outbreak.">
+                <span class="input-group-addon">CID</span>
+                <select class="form-control" id="cid" >
+                    <option value="">Selecione o CID</option>
+                    <option value="A04%">Escherichia coli</option>
+                    <option value="A90">Dengue</option>
+                    <option value="A95%">Yellow Fever</option>
+                    <option value="B05%">Measles</option>
+                    <option value="B15%,B16%,B17%">Hepatitis</option>
+                    <option value="G008,G009">Meningitis</option>
+                    <option value="J10%">Influenza</option>
+                </select>
+            </div>
+        </div>
+
 		<div class="row">
 			<button class="btn btn-success custom" onclick="pesquisar()" data-toggle="tooltip" title="Após definir os parâmetros de consulta, clique aqui para efetuar a pesquisa">Pesquisar</button>				
 		</div>

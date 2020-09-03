@@ -43,15 +43,6 @@
 			
 			<div id="left">
 				
-				<div class="row row-custom">  
-					<div class="col-xs-6">
-						<canvas id="um" width="100" height="35"></canvas>
-					</div>
-					<div class="col-xs-6">
-						<canvas id="dois" width="100" height="35"></canvas>
-					</div>
-				</div>
-				
 				<div class="row row-custom">
 					<div class="col-xs-12">
 						<canvas id="tres" width="200" height="60"></canvas>
@@ -66,9 +57,16 @@
 				
 				<div class="row row-custom">
 					<div class="col-xs-12">
-						<canvas id="cinco" width="200" height="60"></canvas>
+						<canvas id="cinco" width="200" height="45"></canvas>
 					</div>
 				</div>
+
+
+                <div class="row row-custom">
+                    <div class="col-xs-12">
+                        <canvas id="um" width="200" height="50"></canvas>
+                    </div>
+                </div>
 				
 			</div>
 		</div>

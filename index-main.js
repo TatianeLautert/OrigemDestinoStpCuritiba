@@ -3,7 +3,6 @@
 
 //inicializa gráficos
 const ctx1 = document.getElementById("tres").getContext('2d');
-const ctx2 = document.getElementById("dois").getContext('2d');
 const ctx3 = document.getElementById("um").getContext('2d');
 const ctx4 = document.getElementById("quatro").getContext('2d');
 const ctx5 = document.getElementById("cinco").getContext('2d');
@@ -39,6 +38,7 @@ function adicionaCamadasEstaticas() {
 		contentType: "application/json;charset=utf-8",
 		data: {"tipo_roi": 'bairro'},
 		success: function(contornos){
+			console.log(contornos);
 			adicionaPoligonosNoMapa(contornos, 'Bairros', true);
 		}
 	});
@@ -156,6 +156,26 @@ grafico_qtde_atendimentos_por_hora_dia_da_semana = new Chart(ctx5, {
 		title: {
 			display: true,
 			text: 'QUANTIDADE DE ATENDIMENTO POR HORA E DIA DA SEMANA'
+		},
+		legend: {
+			display: false
+		},
+		scales: {
+			yAxes: [{
+				ticks: {
+					suggestedMin: 0
+				}
+			}]
+		}
+	}
+});
+
+grafico_qtde_doenca_semana = new Chart(ctx3, {
+	type: 'bar',
+	options: {
+		title: {
+			display: true,
+			text: 'QUANTIDADE DE CASOS POR SEMANA DO ANO'
 		},
 		legend: {
 			display: false
@@ -327,6 +347,59 @@ function preencherGraficosHoraDiaDaSemana(dados, ano, mes, dow, unidade) {
 	grafico_qtde_atendimentos_por_hora_dia_da_semana.update();
 }
 
+function pesquisarDoencaSemana() {
+	let dados = [];
+	let ano = $('#ano').val();
+	let mes = $('#mes').val();
+	let cid = $('#cid').val();
+
+	$.ajax({
+		type: 'get',
+		url: 'api/bd_qtde_doenca_semana.php',
+		dataType: 'json',
+		contentType: "application/json;charset=utf-8",
+		data: {
+			"cid": cid,
+			"ano": ano
+		},
+		success: function (doencaSemana) {
+			console.debug(doencaSemana);
+			$.each(doencaSemana, function (i, registro) {
+				if (dados[registro.week_number] === undefined) {
+					dados[registro.week_number] = 0;
+				}
+				dados[registro.week_number] += parseInt(registro.total);
+			});
+			pintaGraficosQtdeDoencasSemana(dados, ano, $('#cid option:selected').text());
+		}
+	});
+}
+
+function pintaGraficosQtdeDoencasSemana(dados, ano, cid) {
+
+	for (let i = 1; i < dados.length; i++) {
+		if (dados[i] === undefined) {
+			dados[i] = 0;
+		}
+	}
+
+	console.debug(dados);
+	grafico_qtde_doenca_semana.data = {
+		labels: Object.keys(dados),
+		datasets: [
+			{
+				label: 'Quantidade de casos',
+				data: Object.values(dados),
+				backgroundColor: Array.from(Array(dados.length), (e,i)=> randomColor()),
+				borderWidth: 1,
+				fill: false
+			}
+		]
+	};
+	grafico_qtde_doenca_semana.options.title.text = 'QUANTIDADE DE CASOS POR SEMANA DO ANO ' + ano + ' ' + cid;
+	grafico_qtde_doenca_semana.update();
+}
+
 pesquisar();
 
 
@@ -396,57 +469,12 @@ var marcadores_desembarque = [];
 sessionStorage.setItem('origens_selecionadas', '[]');
 sessionStorage.setItem('destinos_selecionados', '[]');
 
-grafico_barras_idade = new Chart(ctx2, {
-	type: 'bar',
-	options: {
-		title: {
-			display: true,
-			text: 'TOTAL DE EMBARQUES POR IDADE'
-		},
-		scales: {
-			xAxes: [{
-				ticks: {
-					callback: function(dataLabel, index) {
-						return index % 2 === 0 ? dataLabel : '';
-					}
-				}
-			}],
-			yAxes: [{
-				ticks: {
-					suggestedMin: 0
-				}
-			}]
-		}
-	}
-});;
-
-grafico_barras_faixa_etaria = new Chart(ctx3, {
-	type: 'horizontalBar',
-	options: {
-		title: {
-			display: true,
-			text: 'TOTAL DE EMBARQUES POR FAIXA ETÁRIA'
-		},
-		legend: {
-			display: false
-		},
-		scales: {
-			yAxes: [{
-				ticks: {
-					suggestedMin: 0
-				}
-			}]
-		}
-	}
-});
-
-
 function mudaPoligonos() {
 		
 	var tipo_roi = $('#tipo_roi').val();
 	
 	//se o tipo_roi for equivalente a nenhum, remove todos os polígonos do mapa
-	if (tipo_roi == 0){
+	if (tipo_roi == 0) {
 		removePoligonosDoMapa();
 		return 0;
 	}
@@ -848,6 +876,7 @@ function pesquisar() {
 	pesquisarAtendimentos();
 	pesquisarGeneroFaixaEtaria();
 	pesquisarHoraDiaDaSemana();
+	pesquisarDoencaSemana();
 		// $.ajax({
 		// 	type:'get',
 		// 	url:'bd_movimentacao.php',
@@ -876,126 +905,4 @@ function pesquisar() {
 		// 			iconUrl: "images/red.png",
 		// 			iconSize: [10, 10]
 		// 		});
-}
-
-function pintaGraficos(){
-	
-	//embarques por faixa etaria
-	grafico_barras_faixa_etaria.data = {
-		labels: Object.keys(grafico['faixa_etaria']),
-		datasets: [
-			{
-				data: Object.values(grafico['faixa_etaria']),
-				backgroundColor: ["rgba(255, 99, 132, 0.5)","rgba(255, 159, 64, 0.5)","rgba(255, 205, 86, 0.5)","rgba(75, 192, 192, 0.5)","rgba(54, 162, 235, 0.5)","rgba(153, 102, 255, 0.5)", "rgba(201, 203, 207, 0.5)"],
-				borderColor: ["rgb(255, 99, 132)","rgb(255, 159, 64)","rgb(255, 205, 86)","rgb(75, 192, 192)","rgb(54, 162, 235)","rgb(153, 102, 255)", "rgb(201, 203, 207)"],
-				borderWidth:1,
-				fill: false
-			}
-		]
-	};
-	
-	grafico_barras_faixa_etaria.update();
-	
-	
-	//embarques por idade
-	grafico_barras_idade.data = {
-		labels: Object.keys(grafico['idade']),
-		datasets: [
-			{
-				label: 'Embarques por idade',
-				data: Object.values(grafico['idade']),
-				backgroundColor: "rgba(0, 0, 255, 0.5)",
-				borderColor: "rgb(0, 0, 255)",
-			}
-		]
-	};
-	
-	grafico_barras_idade.update();
-	
-	
-	//embarques por faixa etária ao longo do período
-	var rotulos = Object.keys(grafico['embarque']);;
-	var aux = [];
-	var i;
-	
-	var average = Number(sum / rotulos.length).toFixed(2);
-	
-	for(i = 0; i < rotulos.length; i++){
-		aux.push(average);
-	}
-						
-	grafico_linhas_embarque_faixa_etaria_hora.data = {
-		labels: rotulos,
-		datasets: [
-			{
-				label: 'Média',
-				data: aux,
-				backgroundColor: "rgba(255, 0, 0, 0.5)",
-				borderColor: "rgb(255, 0, 0)",
-				cubicInterpolationMode: 'default',
-				fill: false
-			},
-			{
-				label: '0<x<5',
-				data: Object.values(grafico['faixa_etaria_0_5']),
-				backgroundColor: "rgba(255, 99, 132, 0.5)",
-				borderColor: "rgb(255, 99, 132)",
-				cubicInterpolationMode: 'default',
-				fill: false
-			},
-			{
-				label: '5<=x<12',
-				data: Object.values(grafico['faixa_etaria_5_12']),
-				backgroundColor: "rgba(255, 159, 64, 0.5)",
-				borderColor: "rgb(255, 159, 64)",
-				cubicInterpolationMode: 'default',
-				fill: false
-			},
-			{
-				label: '12<=x<18',
-				data: Object.values(grafico['faixa_etaria_12_18']),
-				backgroundColor: "rgba(255, 205, 86, 0.5)",
-				borderColor: "rgb(255, 205, 86)",
-				cubicInterpolationMode: 'default',
-				fill: false
-			},
-			{
-				label: '18<=x<65',
-				data: Object.values(grafico['faixa_etaria_18_65']),
-				backgroundColor: "rgba(75, 192, 192, 0.5)",
-				borderColor: "rgb(75, 192, 192)",
-				cubicInterpolationMode: 'default',
-				fill: false
-			},
-			
-			{
-				label: '>=65',
-				data: Object.values(grafico['faixa_etaria_>65']),
-				backgroundColor: "rgba(54, 162, 235, 0.5)",
-				borderColor: "rgb(54, 162, 235)",
-				cubicInterpolationMode: 'default',
-				fill: false
-			},
-			{
-				label: '<0',
-				data: Object.values(grafico['faixa_etaria_<0']),
-				backgroundColor: "rgba(153, 102, 255, 0.5)", 
-				borderColor: "rgb(153, 102, 255)",
-				cubicInterpolationMode: 'default',
-				fill: false
-			},
-			
-			{
-				label: 'Não Informada',
-				data: Object.values(grafico['faixa_etaria_ninf']),
-				backgroundColor: "rgba(201, 203, 207, 0.5)",
-				borderColor: "rgb(201, 203, 207)",
-				cubicInterpolationMode: 'default',
-				fill: false
-			},
-			
-		]
-	};
-	
-	grafico_linhas_embarque_faixa_etaria_hora.update();
 }

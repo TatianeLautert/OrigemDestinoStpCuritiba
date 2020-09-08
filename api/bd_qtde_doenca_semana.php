@@ -1,6 +1,5 @@
 <?php
 
-//$sql = "select trim(bairro) as bairro, week_number, sum(count) as total from public.qtd_doenca_semana_ano ";
 $sql = "select mb.id_bairro_divisa_bairro as gid, week_number, sum(count) as total 
             from public.qtd_doenca_semana_ano join public.mapeamento_bairro mb on nome_bairro_atentimento_saude = trim(bairro) ";
 $sqlwhere = "";

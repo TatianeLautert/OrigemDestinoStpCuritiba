@@ -20,7 +20,7 @@ if (!empty($_GET['mes'])) {
 }
 
 if (isset($_GET['dow']) && $_GET['dow'] != '') {
-    $sqlwhere .= ($sqlwhere != "" ? " and " : "") . " dayofweek = $". $indiceQuery . " ";
+    $sqlwhere .= ($sqlwhere != "" ? " and " : "") . " day_of_week = $". $indiceQuery . " ";
     array_push($params, $_GET['dow']);
     $indiceQuery++;
 }

@@ -1,6 +1,8 @@
 <?php
 
-$sql = "select trim(bairro) as bairro, week_number, sum(count) as total from public.qtd_doenca_semana_ano ";
+//$sql = "select trim(bairro) as bairro, week_number, sum(count) as total from public.qtd_doenca_semana_ano ";
+$sql = "select mb.id_bairro_divisa_bairro as gid, week_number, sum(count) as total 
+            from public.qtd_doenca_semana_ano join public.mapeamento_bairro mb on nome_bairro_atentimento_saude = trim(bairro) ";
 $sqlwhere = "";
 $params = array();
 
@@ -29,13 +31,7 @@ if (!empty($_GET['ano'])) {
     $indiceQuery++;
 }
 
-if (!empty($_GET['mes'])) {
-    $sqlwhere .= ($sqlwhere != "" ? " and " : "") . " month = $". $indiceQuery . " ";
-    array_push($params, $_GET['mes']);
-    $indiceQuery++;
-}
-
-$sql .=  ($sqlwhere != "" ? " WHERE " . $sqlwhere : "") .  " group by bairro, week_number order by week_number, bairro";
+$sql .=  ($sqlwhere != "" ? " WHERE " . $sqlwhere : "") .  " group by gid, week_number order by week_number, gid";
 
 error_log($sql);
 $conexao = pg_connect('host=localhost port=5435 dbname=postgiscwb user=postread password=PostRead');

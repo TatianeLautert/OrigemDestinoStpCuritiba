@@ -27,7 +27,15 @@ L.control.scale({metric: true, imperial: false}).addTo(map);
 const LAYER_CONTROL = L.control.layers({"OSM": camada_OSM}, {});
 LAYER_CONTROL.addTo(map);
 
+//cria uma camada de heatmap
+let heatmap = L.heatLayer().setOptions({
+	max: 1,
+	radius: 25,
+	blur: 15
+});
+
 let unidadesSaude = [];
+let bairros = [];
 let layerUnidadeSaudeSelecionada;
 
 function adicionaCamadasEstaticas() {
@@ -38,7 +46,7 @@ function adicionaCamadasEstaticas() {
 		contentType: "application/json;charset=utf-8",
 		data: {"tipo_roi": 'bairro'},
 		success: function(contornos){
-			console.log(contornos);
+			console.debug(contornos);
 			adicionaPoligonosNoMapa(contornos, 'Bairros', true);
 		}
 	});
@@ -61,8 +69,18 @@ function adicionaCamadasEstaticas() {
 		success: function(unidades) {
 			unidadesSaude = unidades;
 			criarComboUnidades(unidades);
-			l = adicionarMarcadorNoMapa(unidades, 'UMS');
+			let l = adicionarMarcadorNoMapa(unidades, 'UMS');
 			map.addLayer(l);
+		}
+	});
+
+	$.ajax({
+		type:'get',
+		url:'api/bd_bairros.php',
+		dataType: 'json',
+		contentType: "application/json;charset=utf-8",
+		success: function(retorno) {
+			bairros = retorno;
 		}
 	});
 }
@@ -186,6 +204,17 @@ grafico_qtde_doenca_semana = new Chart(ctx3, {
 					suggestedMin: 0
 				}
 			}]
+		},
+		annotation: {
+			annotations: [{
+				type: 'line',
+				mode: 'horizontal',
+				scaleID: 'y-axis-0',
+				value: '26',
+				borderColor: 'tomato',
+				borderWidth: 1
+			}],
+			drawTime: "afterDraw" // (default)
 		}
 	}
 });
@@ -319,7 +348,7 @@ function pesquisarHoraDiaDaSemana() {
 			"dow": dow
 		},
 		success: function (atendimentos) {
-			console.log(atendimentos);
+			console.debug(atendimentos);
 			$.each(atendimentos, function (i, atendimento) {
 				dados[atendimento.hour] = atendimento.total;
 			});
@@ -329,7 +358,7 @@ function pesquisarHoraDiaDaSemana() {
 }
 
 function preencherGraficosHoraDiaDaSemana(dados, ano, mes, dow, unidade) {
-	console.info(dados);
+	console.debug(dados);
 	grafico_qtde_atendimentos_por_hora_dia_da_semana.data = {
 		labels: Object.keys(dados),
 		datasets: [
@@ -364,33 +393,44 @@ function pesquisarDoencaSemana() {
 		},
 		success: function (doencaSemana) {
 			console.debug(doencaSemana);
+			let total = 0;
 			$.each(doencaSemana, function (i, registro) {
 				if (dados[registro.week_number] === undefined) {
 					dados[registro.week_number] = 0;
 				}
-				dados[registro.week_number] += parseInt(registro.total);
+				const valor = parseInt(registro.total);
+				dados[registro.week_number] += valor;
+				total += valor;
 			});
-			pintaGraficosQtdeDoencasSemana(dados, ano, $('#cid option:selected').text());
+			let media = total / (dados.length - 1);
+			pintaGraficosQtdeDoencasSemana(dados, media, ano, $('#cid option:selected').text());
+			pintaHeatMapCasosPorSemana(doencaSemana, media, cid, (dados.length - 1));
 		}
 	});
 }
 
-function pintaGraficosQtdeDoencasSemana(dados, ano, cid) {
-
-	for (let i = 1; i < dados.length; i++) {
-		if (dados[i] === undefined) {
-			dados[i] = 0;
-		}
+function pintaGraficosQtdeDoencasSemana(dados = [], media = 1, ano, cid) {
+	if (dados.length == 0) {
+		return;
 	}
+	let cores = Array(dados.length);
+	const outbreakThreashold = media + (2 * getStandardDeviation(dados, dados.length, media));
+	for (let i = 0; i < dados.length -1; i++) {
+		idx = i + 1;
+		if (dados[idx] === undefined) {
+			dados[idx] = 0;
+		}
+		cores[i] = dados[idx] >= outbreakThreashold ? 'red' : 'green';
+	}
+	console.log(cores);
 
-	console.debug(dados);
 	grafico_qtde_doenca_semana.data = {
 		labels: Object.keys(dados),
 		datasets: [
 			{
 				label: 'Quantidade de casos',
 				data: Object.values(dados),
-				backgroundColor: Array.from(Array(dados.length), (e,i)=> randomColor()),
+				backgroundColor: cores,
 				borderWidth: 1,
 				fill: false
 			}
@@ -400,16 +440,51 @@ function pintaGraficosQtdeDoencasSemana(dados, ano, cid) {
 	grafico_qtde_doenca_semana.update();
 }
 
+function pintaHeatMapCasosPorSemana(doencaSemana, media, cid, totalSemanas) {
+	//bairros
+	if(map.hasLayer(heatmap)) {
+		map.removeLayer(heatmap);
+		LAYER_CONTROL.removeLayer(heatmap);
+		//map.removeLayer("Bairros")
+	}
+
+	let pontos = Array();
+	bairros.forEach(bairro => {
+		const indice = calcularIndiceOutbreakParaBairro(bairro, doencaSemana, totalSemanas);
+		contorno = JSON.parse(bairro.contorno)[0];
+		pontos.push([contorno.lat, contorno.lng, indice]);
+	});
+
+	heatmap = L.heatLayer(pontos).setOptions({
+		//max: 1,
+		radius: 40,
+		//blur: 90,
+		max:.1
+	});
+
+	LAYER_CONTROL.addOverlay(heatmap, "Outbreak Heat Map");
+	heatmap.addTo(map);
+}
+
+function calcularIndiceOutbreakParaBairro(bairro, doencaSemana, totalSemanas) {
+	const dadosBairro = doencaSemana.filter(ds => ds.gid === bairro.gid);
+	console.debug(dadosBairro);
+	if (dadosBairro.length === 0) {
+		return 0;
+	}
+	const valores = dadosBairro.map(db => parseInt(db.total));
+	const mean = valores.reduce((a, b) => a + b) / totalSemanas;
+	const stdDev = getStandardDeviation(valores, totalSemanas, mean);
+	const outbreakThreashold = mean + (2 * stdDev);
+	return valores.map((valor => valor >= outbreakThreashold ? 1 : 0)).reduce((a, b) => a + b);
+}
+
+function getStandardDeviation(valores, len, mean) {
+	return Math.sqrt(valores.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / len)
+}
+
 pesquisar();
 
-
-
-//cria uma camada de heatmap
-var heatmap = L.heatLayer().setOptions({
-	max: 1,
-	radius: 25,
-	blur: 15
-});
 
 //cria uma camada de heatmap
 var heatmapEmbDesembA = L.heatLayer().setOptions({

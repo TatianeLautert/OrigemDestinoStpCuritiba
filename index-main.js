@@ -120,6 +120,7 @@ function adicionarMarcadorNoMapa(aux_contornos, nome_camada, nome_icone = "blue.
 		if (nome_camada == null) {
 			nome_camada = aux_contorno.nome;
 		}
+
 	});
 	let grupo = L.layerGroup(poligonos_da_camada);
 	LAYER_CONTROL.addOverlay(grupo, nome_camada);
@@ -191,7 +192,7 @@ grafico_qtde_doenca_semana = new Chart(ctx3, {
 	options: {
 		title: {
 			display: true,
-			text: 'QUANTIDADE DE CASOS POR SEMANA DO ANO'
+			text: 'QUANTIDADE DE CASOS POR SEMANA DO ANO E SURTOS'
 		},
 		legend: {
 			display: false
@@ -433,7 +434,7 @@ function pintaGraficosQtdeDoencasSemana(dados = [], media = 1, ano, cid) {
 			}
 		]
 	};
-	grafico_qtde_doenca_semana.options.title.text = 'QUANTIDADE DE CASOS POR SEMANA DO ANO ' + ano + ' ' + cid;
+	grafico_qtde_doenca_semana.options.title.text = 'QUANTIDADE DE CASOS POR SEMANA DO ANO E SURTOS' + ano + ' ' + cid;
 	grafico_qtde_doenca_semana.update();
 }
 
@@ -458,7 +459,7 @@ function pintaHeatMapCasosPorSemana(doencaSemana, media, cid, totalSemanas) {
 		max:.1
 	});
 
-	LAYER_CONTROL.addOverlay(heatmap, "Outbreak Heat Map");
+	LAYER_CONTROL.addOverlay(heatmap, "Mapa de Calor Surtos");
 	heatmap.addTo(map);
 }
 

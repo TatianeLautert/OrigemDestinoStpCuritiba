@@ -1,9 +1,9 @@
-# Protótipo de visualização de Origem-Destino do Sistema de Transporte Público
+# Protótipo de visualização de Dados Abertos de Saúde de Curitiba
 <img src="https://raw.githubusercontent.com/yussefparcianello/OrigemDestinoStpCuritiba/master/images/fig02.jpg">
 https://www.youtube.com/watch?v=KOzFHRc7lXA
 
 ## Principais arquivos da aplicação
-+ **index.php**: é o arquivo inicial da aplicação. É responsável por dividir a interface de usuário verticalmente ao meio, estabelecendo à esquerda da tela a região do mapa e do menu, e à direita da tela a região dos gráficos
++ **index.php**: é o arquivo inicial da aplicação. É responsável por dividir a interface de usuário verticalmente ao meio, estabelecendo à esquerda da tela a região dos gráficos e a direita da tela a região do mapa, menu e escolha de camadas a serem mostradas no mapa.
 
 + **tela_inicial.php**: é o arquivo responsável pela construção do menu de busca da aplicação
 

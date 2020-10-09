@@ -3,7 +3,7 @@
     <head>
 		<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
         <meta charset="utf-8">
-        <title>Origem Destino</title>
+        <title>Saúde Curitiba</title>
 		
 		<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
 		

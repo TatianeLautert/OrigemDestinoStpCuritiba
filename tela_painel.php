@@ -11,6 +11,7 @@
 				<span class="input-group-addon">Ano</span>
                 <select  class="form-control" id="ano">
                     <option value="">Todos</option>
+                    <option value="2020">2020</option>
                     <option value="2019">2019</option>
                     <option value="2018">2018</option>
                     <option value="2017">2017</option>
@@ -70,17 +71,20 @@
 
         <div class="row">
             <div class="input-group custom"
-                 title="Selecione o código do CID para os dados de outbreak.">
+                 title="Selecione o código do CID para os dados de surtos.">
                 <span class="input-group-addon">CID</span>
                 <select class="form-control" id="cid" >
                     <option value="">Selecione o CID</option>
                     <option value="A04%">Escherichia coli</option>
                     <option value="A90">Dengue</option>
-                    <option value="A95%">Yellow Fever</option>
-                    <option value="B05%">Measles</option>
-                    <option value="B15%,B16%,B17%">Hepatitis</option>
-                    <option value="G008,G009">Meningitis</option>
+                    <option value="A95%">Febre Amarela</option>
+                    <option value="B05%">Sarampo</option>
+                    <option value="B15%,B16%,B17%">Hepatites</option>
+                    <option value="G008,G009">Meningite</option>
                     <option value="J10%">Influenza</option>
+                    <option value="U049">SIRAG</option>
+                    <option value="U071">COVID-Confirmado</option>
+                    <option value="U072">COVID-Suspeito</option>
                 </select>
             </div>
         </div>
